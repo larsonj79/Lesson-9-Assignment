@@ -5,178 +5,310 @@ library(testthat)
 # you can have multiple tests for each question
 
 library(readxl)
-library(dplyr)
 library(ggplot2)
+library(dplyr)
 fexp <- read_excel("FieldExperiment.xlsx")
 fexp <- data.frame(fexp)
 fexp$DATE <- as.Date(fexp$DATE)
 fexp$WEEK <- factor(fexp$WEEK)
 
+fexpnykey <- fexp %>% 
+  filter(DMA_NAME == "New York, NY")
 
-test_that("Q2 Names (visible)", {
+FBProspkey <- ggplot(fexpnykey, aes(x = FACEBOOK_PROSPECTING_CLICKS, y = FACEBOOK_PROSPECTING_SPEND)) +
+  geom_point()
+
+FBProsp2key <- ggplot(fexpnykey, aes(x = FACEBOOK_PROSPECTING_CLICKS, 
+                               y = FACEBOOK_PROSPECTING_SPEND,
+                               size = SHOPIFY_US_SALES)) +
+  geom_point()
+
+fexp_nylakey <- fexp %>% 
+  filter(DMA_NAME %in% c("New York, NY", "Los Angeles, CA"))
+
+FBRetkey <- ggplot(data = fexp_nylakey, aes(x = FACEBOOK_RETARGETING_CLICKS,
+                                      y = FACEBOOK_RETARGETING_SPEND,
+                                      size = SHOPIFY_US_SALES,
+                                      color = DMA_NAME)) +
+  geom_point(alpha = .5)
+
+FBRet2key <- ggplot(data = fexp_nylakey, aes(x = FACEBOOK_RETARGETING_CLICKS,
+                                       y = FACEBOOK_RETARGETING_SPEND,
+                                       size = SHOPIFY_US_SALES,
+                                       shape = DMA_NAME)) +
+  geom_point(alpha = .5)
+
+fexp_top51key <- fexp %>% 
+  filter(POPN > 600000)
+
+GPC51key <- ggplot(data = fexp_top51key, aes(x = GOOGLE_PROSPECTING_IMPRESSIONS, 
+                                       y = GOOGLE_PROSPECTING_CLICKS)) +
+  geom_point(alpha = .5)
+
+GPC51bkey <- fexp_top51key %>% 
+  group_by(DMA_NAME) %>% 
+  summarize(TotImp = sum(GOOGLE_PROSPECTING_IMPRESSIONS),
+            TotClick = sum(GOOGLE_PROSPECTING_CLICKS)) %>% 
+  ggplot(aes(x = TotImp, y = TotClick)) +
+  geom_point(alpha = .5)
+
+top51_ratiokey <- fexp_top51key %>% 
+  group_by(DMA_NAME) %>% 
+  summarize(TotSales = sum(SHOPIFY_US_SALES),
+            POPN = mean(POPN)) %>% 
+  mutate(SalesPerCap = TotSales / POPN)
+
+SPChistkey <- ggplot(data = top51_ratiokey, aes(x = SalesPerCap)) +
+  geom_histogram()
+
+SPCBarkey <- ggplot(data = top51_ratiokey, aes(x = reorder(DMA_NAME, -SalesPerCap), y = SalesPerCap)) +
+  geom_col() +
+  theme(axis.text.x = element_text(angle = 90))
+
+GRscatterkey <- ggplot(data = fexp_nylakey, aes(x = GOOGLE_RETARGETING_IMPRESSIONS,
+                                          y = GOOGLE_RETARGETING_CLICKS,
+                                          color = DMA_NAME,
+                                          size = SHOPIFY_US_SALES)) +
+  geom_point()
+
+GRscatterbkey <- ggplot(data = fexp_nylakey, aes(x = GOOGLE_RETARGETING_IMPRESSIONS,
+                                           y = GOOGLE_RETARGETING_CLICKS,
+                                           color = DMA_NAME,
+                                           size = SHOPIFY_US_SALES)) +
+  geom_point() +
+  scale_color_brewer()
+
+GRscatterckey <- ggplot(data = fexp_nylakey, aes(x = GOOGLE_RETARGETING_IMPRESSIONS,
+                                           y = GOOGLE_RETARGETING_CLICKS,
+                                           color = DMA_NAME,
+                                           size = SHOPIFY_US_SALES)) +
+  geom_point() +
+  scale_color_brewer() +
+  theme_classic()
+
+GRscatterdkey <- ggplot(data = fexp_nylakey, aes(x = GOOGLE_RETARGETING_IMPRESSIONS,
+                                           y = GOOGLE_RETARGETING_CLICKS,
+                                           color = DMA_NAME,
+                                           size = SHOPIFY_US_SALES)) +
+  geom_point() +
+  scale_color_brewer(palette = "Set2") +
+  theme_classic()
+
+top51_ratiokey <- top51_ratiokey %>% 
+  mutate(POPN2 = ifelse(POPN > 2000000, 3, ifelse(POPN < 1000000, 1, 2)))
+
+SPCBar2key <- ggplot(data = top51_ratiokey, aes(x = reorder(DMA_NAME, -SalesPerCap), 
+                                          y = SalesPerCap,
+                                          fill = as.factor(POPN2))) +
+  geom_col() +
+  theme(axis.text.x = element_text(angle = 90))
+
+SPCBar3key <- ggplot(data = top51_ratiokey, aes(x = reorder(DMA_NAME, -SalesPerCap), 
+                                          y = SalesPerCap,
+                                          fill = as.factor(POPN2))) +
+  geom_col() +
+  scale_fill_brewer(palette = "Dark2") +
+  theme(axis.text.x = element_text(angle = 90))
+
+popnbarkey <- ggplot(data = top51_ratiokey, aes(x = as.factor(POPN2), 
+                                          y = POPN)) +
+  geom_bar(stat = "identity")
+
+popnbar2key <- ggplot(data = top51_ratiokey, aes(x = as.factor(POPN2), 
+                                           y = POPN,
+                                           fill = DMA_NAME)) +
+  geom_bar(stat = "identity") +
+  theme(legend.position = "none")
+
+popnbar3key <- ggplot(data = top51_ratiokey, aes(x = as.factor(POPN2), 
+                                           y = POPN,
+                                           fill = DMA_NAME)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  theme(legend.position = "none")
+
+popnbar4key <- ggplot(data = top51_ratiokey, aes(x = as.factor(POPN2), 
+                                           y = POPN,
+                                           fill = DMA_NAME)) +
+  geom_bar(stat = "identity", position = "fill") +
+  theme(legend.position = "none")
+
+popnbar5key <- ggplot(data = top51_ratiokey, aes(x = as.factor(POPN2), 
+                                           y = POPN,
+                                           fill = DMA_NAME)) +
+  geom_bar(stat = "identity", 
+           position = position_dodge(width = .5),
+           alpha = .5) +
+  theme(legend.position = "none")
+
+
+
+test_that("Q1 Names (visible)", {
   
-  expect_true(dim(fexp2)[1] == 4410)
-  expect_true(dim(fexp2)[2] == 11)
-  expect_true(names(fexp2)[1] == "DATE")
-  expect_true(names(fexp2)[4] == "GP")
-  expect_true(names(fexp2)[9] == "WebSales")
+  expect_true(dim(fexpny)[1] == 21)
+  expect_true(dim(fexpny)[2] == 26)
+  expect_true(names(fexpny)[1] == "DATE")
+  expect_true(names(fexpny)[4] == "DMA_CONDITION")
+  expect_true(names(fexpny)[9] == "GOOGLE_RETARGETING_IMPRESSIONS")
 
 })
 
-test_that("Q2 Values (visible)", {
+test_that("Q2 plot (visible)", {
   
-  expect_equal(fexp2$GP[3], .85, tolerance = 1e-1)
-  expect_equal(fexp2$FR[10], 2.78, tolerance = 1e-1)
-  expect_equal(fexp2$POPN[1001], 74500, tolerance = 1e-1)
-  expect_equal(fexp2$GR[3333], 0, tolerance = 1e-1)
-  expect_equal(fexp2$FP[4300], 20.24, tolerance = 1e-1)
-
-})
-
-test_that("Q3 (visible)", {
-  
-  expect_equal(SpendTotals$GP_spend, 20517.62, tolerance = 1)
-  expect_equal(SpendTotals$GB_spend, 20655.67, tolerance = 1)
-  expect_equal(SpendTotals$FB_spend, 59727.54, tolerance = 1)
-
-})
-
-test_that("Q4 Structure (visible)", {
-  
-  expect_true(dim(top10gp)[1] == 10)
-  expect_true(names(top10gp)[2] == "GP_spend")
-              
-})
-  
-test_that("Q4 Values (visible)", {
-  
-  expect_equal(top10gp$GP_spend[3], 849.19, tolerance = 1)
-  expect_equal(sum(top10gp$GP_spend), 7270.9, tolerance = 1)
+  expect_equal(FBProsp$layers[[1]], FBProspkey$layers[[1]])
+  expect_equal(FBProsp$scales, FBProspkey$scales)
+  expect_equal(FBProsp$mapping, FBProspkey$mapping)
+  expect_equal(FBProsp$labels, FBProspkey$labels)
   
 })
 
-test_that("Q5 (visible)", {
+test_that("Q3 plot (visible)", {
   
-  expect_equal(top10gr$GR_spend[3], 1034.17, tolerance = 1)
-  expect_equal(sum(top10gr$GR_spend), 8581.76, tolerance = 1)
-  
-})
-
-test_that("Q6 (visible)", {
-  
-  expect_equal(top10fp$FP_spend[3], 1194.42, tolerance = 1)
-  expect_equal(sum(top10fp$FP_spend), 12509.34, tolerance = 1)
+  expect_equal(FBProsp2$layers[[1]], FBProsp2key$layers[[1]])
+  expect_equal(FBProsp2$scales, FBProsp2key$scales)
+  expect_equal(FBProsp2$mapping, FBProsp2key$mapping)
+  expect_equal(FBProsp2$labels, FBProsp2key$labels)
   
 })
 
-test_that("Q7 Structure (visible)", {
+
+test_that("Q4 plot (visible)", {
   
-  expect_true(dim(top10spend)[1] == 10)
-  expect_true(dim(top10spend)[2] == 6)
-  expect_true(names(top10spend)[2] == "GP_spend")
-  expect_true(names(top10spend)[5] == "FP_spend")
+  expect_equal(FBRet$layers[[1]], FBRetkey$layers[[1]])
+  expect_equal(FBRet$scales, FBRetkey$scales)
+  expect_equal(FBRet$mapping, FBRetkey$mapping)
+  expect_equal(FBRet$labels, FBRetkey$labels)
   
 })
 
-test_that("Q7 GP_values (visible)", {
+
+test_that("Q5 plot (visible)", {
   
-  expect_equal(top10spend$GP_spend[4], 678.95, tolerance = 1) 
-  expect_equal(top10spend$GP_spend[9], 521.19, tolerance = 1) 
-  expect_equal(sum(top10spend$GP_spend), 7270.9, tolerance = 1) 
+  expect_equal(FBRet2$layers[[1]], FBRet2key$layers[[1]])
+  expect_equal(FBRet2$scales, FBRet2key$scales)
+  expect_equal(FBRet2$mapping, FBRet2key$mapping)
+  expect_equal(FBRet2$labels, FBRet2key$labels)
   
 })
 
-test_that("Q7 GR_values (visible)", {
+
+test_that("Q7 plot (visible)", {
   
-  expect_equal(top10spend$GR_spend[4], 688.21, tolerance = 1) 
-  expect_equal(top10spend$GR_spend[9], 626.26, tolerance = 1) 
-  expect_equal(sum(top10spend$GR_spend), 8024.4, tolerance = 1) 
+  expect_equal(GPC51$layers[[1]], GPC51key$layers[[1]])
+  expect_equal(GPC51$scales, GPC51key$scales)
+  expect_equal(GPC51$mapping, GPC51key$mapping)
+  expect_equal(GPC51$labels, GPC51key$labels)
   
 })
 
-test_that("Q7 Other_values (visible)", {
+
+test_that("Q8 plot (visible)", {
   
-  expect_equal(top10spend$FP_spend[4], 1194.42, tolerance = 1) 
-  expect_equal(top10spend$GB_spend[9], 277.93, tolerance = 1) 
-  expect_equal(sum(top10spend$GR_spend), 8024.4, tolerance = 1) 
+  expect_equal(GPC51b$layers[[1]], GPC51bkey$layers[[1]])
+  expect_equal(GPC51b$scales, GPC51bkey$scales)
+  expect_equal(GPC51b$mapping, GPC51bkey$mapping)
+  expect_equal(GPC51b$labels, GPC51bkey$labels)
   
 })
 
-test_that("Q8 Structure (visible)", {
+
+test_that("Q10 plot (visible)", {
   
-  expect_true(dim(top25pcsales)[1] == 25)
-  expect_true(dim(top25pcsales)[2] == 2)
-  expect_true(names(top25pcsales)[1] == "DMA_NAME")
-  expect_true(names(top25pcsales)[2] == "PCSales")
+  expect_equal(SPChist$layers[[1]], SPChistkey$layers[[1]])
+  expect_equal(SPChist$scales, SPChistkey$scales)
+  expect_equal(SPChist$mapping, SPChistkey$mapping)
+  expect_equal(SPChist$labels, SPChistkey$labels)
   
 })
 
-test_that("Q8 Values (visible)", {
-  
-  expect_equal(top25pcsales$PCSales[5], .002009428, tolerance = 1e-5) 
-  expect_equal(top25pcsales$PCSales[14], .00166192, tolerance = 1e-5) 
-  expect_equal(top25pcsales$PCSales[22], .00147231, tolerance = 1e-5) 
 
-})
-
-test_that("Q9 Structure (visible)", {
+test_that("Q11 plot (visible)", {
   
-  expect_true(dim(top5days)[1] == 5)
-  expect_true(dim(top5days)[2] == 4)
-  expect_true(names(top5days)[1] == "DATE")
-  expect_true(names(top5days)[3] == "Total_Google_Spend")
+  expect_equal(SPCBar$layers[[1]], SPCBarkey$layers[[1]])
+  expect_equal(SPCBar$scales, SPCBarkey$scales)
+  expect_equal(SPCBar$mapping, SPCBarkey$mapping)
+  expect_equal(SPCBar$labels, SPCBarkey$labels)
   
 })
 
-test_that("Q9 Values (visible)", {
+
+test_that("Q14 plot (visible)", {
   
-  expect_equal(top5days$Total_Ad_Spend[2], 7445.44, tolerance = 1) 
-  expect_equal(top5days$Total_Google_Spend[3], 3358.7, tolerance = 1) 
-  expect_equal(top5days$Total_Ad_Spend[5], 6964.08, tolerance = 1) 
-  expect_equal(top5days$Total_Facebook_Spend[4], 3902.59, tolerance = 1) 
+  expect_equal(GRscatter$layers[[1]], GRscatterkey$layers[[1]])
+  expect_equal(GRscatter$scales, GRscatterkey$scales)
+  expect_equal(GRscatter$mapping, GRscatterkey$mapping)
+  expect_equal(GRscatter$labels, GRscatterkey$labels)
   
 })
 
-test_that("Q10 Structure (visible)", {
+
+test_that("Q15 plot (visible)", {
   
-  expect_true(dim(wksales)[1] == 9)
-  expect_true(dim(wksales)[2] == 3)
-  expect_true(names(wksales)[2] == "WEEK")
-  expect_true(names(wksales)[3] == "TotSales")
+  expect_equal(GRscatterb$layers[[1]], GRscatterbkey$layers[[1]])
+  expect_equal(GRscatterb$scales, GRscatterbkey$scales)
+  expect_equal(GRscatterb$mapping, GRscatterbkey$mapping)
+  expect_equal(GRscatterb$labels, GRscatterbkey$labels)
   
 })
 
-test_that("Q10 Values A (visible)", {
+test_that("Q16 plot (visible)", {
   
-  expect_equal(wksales$TotSales[2], 510.14, tolerance = 1) 
-  expect_equal(wksales$TotSales[3], 118.53, tolerance = 1) 
-  expect_equal(wksales$TotSales[5], 19.55, tolerance = 1) 
-  
-})
-
-test_that("Q10 Values B (visible)", {
-  
-  expect_equal(wksales$TotSales[7], 893.78, tolerance = 1) 
-  expect_equal(wksales$TotSales[8], 692.05, tolerance = 1) 
-  expect_equal(wksales$TotSales[9], 1887.95, tolerance = 1) 
+  expect_equal(GRscatterc$layers[[1]], GRscatterckey$layers[[1]])
+  expect_equal(GRscatterc$scales, GRscatterckey$scales)
+  expect_equal(GRscatterc$mapping, GRscatterckey$mapping)
+  expect_equal(GRscatterc$labels, GRscatterckey$labels)
   
 })
 
-test_that("Q11 Structure (visible)", {
+test_that("Q17 plot (visible)", {
   
-  expect_true(dim(salesstats)[1] == 1)
-  expect_true(dim(salesstats)[2] == 4)
-  expect_true(names(salesstats)[2] == "Max")
-  expect_true(names(salesstats)[3] == "Medn")
+  expect_equal(GRscatterd$layers[[1]], GRscatterdkey$layers[[1]])
+  expect_equal(GRscatterd$scales, GRscatterdkey$scales)
+  expect_equal(GRscatterd$mapping, GRscatterdkey$mapping)
+  expect_equal(GRscatterd$labels, GRscatterdkey$labels)
   
 })
 
-test_that("Q11 Values (visible)", {
+test_that("Q19 plot (visible)", {
   
-  expect_equal(salesstats$Min, 0, tolerance = 1e-2) 
-  expect_equal(salesstats$Max, 39572.47, tolerance = 1) 
-  expect_equal(salesstats$Medn, 1131.575, tolerance = 1) 
-  expect_equal(salesstats$Mean, 2731.762, tolerance = 1) 
- 
+  expect_equal(SPCBar2$layers[[1]], SPCBar2key$layers[[1]])
+  expect_equal(SPCBar2$scales, SPCBar2key$scales)
+  expect_equal(SPCBar2$mapping, SPCBar2key$mapping)
+  expect_equal(SPCBar2$labels, SPCBar2key$labels)
+  
 })
 
+test_that("Q20 plot (visible)", {
+  
+  expect_equal(SPCBar3$layers[[1]], SPCBar3key$layers[[1]])
+  expect_equal(SPCBar3$scales, SPCBar3key$scales)
+  expect_equal(SPCBar3$mapping, SPCBar3key$mapping)
+  expect_equal(SPCBar3$labels, SPCBar3key$labels)
+  
+})
+
+test_that("Q21 plot (visible)", {
+  
+  expect_equal(popnbar$layers[[1]], popnbarkey$layers[[1]])
+  expect_equal(popnbar$scales, popnbarkey$scales)
+  expect_equal(popnbar$mapping, popnbarkey$mapping)
+  expect_equal(popnbar$labels, popnbarkey$labels)
+  
+})
+
+test_that("Q23 plot (visible)", {
+  
+  expect_equal(popnbar3$layers[[1]], popnbar3key$layers[[1]])
+  expect_equal(popnbar3$scales, popnbar3key$scales)
+  expect_equal(popnbar3$mapping, popnbar3key$mapping)
+  expect_equal(popnbar3$labels, popnbar3key$labels)
+  
+})
+
+test_that("Q25 plot (visible)", {
+  
+  expect_equal(popnbar5$layers[[1]], popnbar5key$layers[[1]])
+  expect_equal(popnbar5$scales, popnbar5key$scales)
+  expect_equal(popnbar5$mapping, popnbar5key$mapping)
+  expect_equal(popnbar5$labels, popnbar5key$labels)
+  
+})
